@@ -1,3 +1,8 @@
+/*
+ * Original author: KOWX712, u9521, Ylarod, AlexLiuDev233, ShirkNeko and SukiSU contributors.
+ * Modified by: Kilo on 2026-06-21.
+ * Modification: Always show the status card and main quick cards; remove support and learn-more home cards.
+ */
 package com.sukisu.ultra.ui.screen.home
 
 import androidx.compose.animation.AnimatedVisibility
@@ -55,7 +60,6 @@ import com.sukisu.ultra.ui.util.BlurredBar
 import com.sukisu.ultra.ui.util.module.LatestVersionInfo
 import com.sukisu.ultra.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
@@ -63,7 +67,6 @@ import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
@@ -168,8 +171,6 @@ fun HomePagerMiuix(
                             UpdateCard(state = state, actions = actions)
                         }
                         InfoCard(systemInfo = state.systemInfo, showFullStatus = state.showFullStatus)
-                        DonateCard(onOpenUrl = actions.onOpenUrl)
-                        LearnMoreCard(onOpenUrl = actions.onOpenUrl)
                     }
                     Spacer(Modifier.height(bottomInnerPadding))
                 }
@@ -236,210 +237,152 @@ private fun StatusCard(
     actions: HomeActions,
 ) {
     Column {
-        when {
-            state.ksuVersion != null -> {
-                val workingState = buildString {
-                    if (state.isSafeMode) {
-                        append(" [${stringResource(id = R.string.safe_mode)}]")
-                    }
-                    if (state.isLateLoadMode) {
-                        append(" [${stringResource(id = R.string.jailbreak_mode)}]")
-                    }
-                }
-                val workingMode = when (state.lkmMode) {
-                    null -> ""
-                    true -> " <LKM>"
-                    else -> " <Built-in>"
-                }
-                val workingText = "${stringResource(id = R.string.home_working)}$workingMode$workingState"
+        val workingState = buildString {
+            if (state.isSafeMode) {
+                append(" [${stringResource(id = R.string.safe_mode)}]")
+            }
+            if (state.isLateLoadMode) {
+                append(" [${stringResource(id = R.string.jailbreak_mode)}]")
+            }
+        }
+        val workingMode = when (state.lkmMode) {
+            null -> ""
+            true -> " <LKM>"
+            else -> " <Built-in>"
+        }
+        val workingText = if (state.ksuVersion != null) {
+            "${stringResource(id = R.string.home_working)}$workingMode$workingState"
+        } else {
+            stringResource(R.string.home_not_installed)
+        }
+        val versionText = state.ksuVersion?.let { version ->
+            stringResource(R.string.home_working_version, "$version-${state.kernelUAPIVersion}")
+        } ?: stringResource(R.string.home_not_installed)
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(IntrinsicSize.Min),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Card(
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                colors = CardDefaults.defaultColors(
+                    color = when {
+                        isDynamicColor -> colorScheme.secondaryContainer
+                        isInDarkTheme() -> Color(0xFF1A3825)
+                        else -> Color(0xFFDFFAE4)
+                    }
+                ),
+                onClick = {
+                    if (!state.isLateLoadMode) {
+                        actions.onInstallClick()
+                    }
+                },
+                showIndication = !state.isLateLoadMode,
+                pressFeedbackType = PressFeedbackType.Tilt
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Box(
                         modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        colors = CardDefaults.defaultColors(
-                            color = when {
-                                isDynamicColor -> colorScheme.secondaryContainer
-                                isInDarkTheme() -> Color(0xFF1A3825)
-                                else -> Color(0xFFDFFAE4)
-                            }
-                        ),
-                        onClick = {
-                            if (!state.isLateLoadMode) {
-                                actions.onInstallClick()
-                            }
-                        },
-                        showIndication = !state.isLateLoadMode,
-                        pressFeedbackType = PressFeedbackType.Tilt
+                            .fillMaxSize()
+                            .offset(38.dp, 45.dp),
+                        contentAlignment = Alignment.BottomEnd
                     ) {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .offset(38.dp, 45.dp),
-                                contentAlignment = Alignment.BottomEnd
-                            ) {
-                                Icon(
-                                    modifier = Modifier.size(170.dp),
-                                    imageVector = Icons.Rounded.CheckCircleOutline,
-                                    tint = if (isDynamicColor) {
-                                        colorScheme.primary.copy(alpha = 0.8f)
-                                    } else {
-                                        Color(0xFF36D167)
-                                    },
-                                    contentDescription = null
-                                )
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(all = 16.dp)
-                            ) {
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = workingText,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(Modifier.height(2.dp))
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = stringResource(R.string.home_working_version, "${state.ksuVersion}-${state.kernelUAPIVersion}"),
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
+                        Icon(
+                            modifier = Modifier.size(170.dp),
+                            imageVector = Icons.Rounded.CheckCircleOutline,
+                            tint = if (isDynamicColor) {
+                                colorScheme.primary.copy(alpha = 0.8f)
+                            } else {
+                                Color(0xFF36D167)
+                            },
+                            contentDescription = null
+                        )
                     }
                     Column(
                         modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
+                            .fillMaxSize()
+                            .padding(all = 16.dp)
                     ) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            insideMargin = PaddingValues(16.dp),
-                            onClick = { actions.onSuperuserClick() },
-                            showIndication = true,
-                            pressFeedbackType = PressFeedbackType.Tilt
-                        ) {
-                            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = stringResource(R.string.superuser),
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 15.sp,
-                                    color = colorScheme.onSurfaceVariantSummary,
-                                )
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = state.superuserCount.toString(),
-                                    fontSize = 26.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = colorScheme.onSurface,
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            insideMargin = PaddingValues(16.dp),
-                            onClick = { actions.onModuleClick() },
-                            showIndication = true,
-                            pressFeedbackType = PressFeedbackType.Tilt
-                        ) {
-                            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = stringResource(R.string.module),
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 15.sp,
-                                    color = colorScheme.onSurfaceVariantSummary,
-                                )
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = state.moduleCount.toString(),
-                                    fontSize = 26.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = colorScheme.onSurface,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            state.kernelVersion.isGKI() -> {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Card(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            if (!state.isLateLoadMode) {
-                                actions.onInstallClick()
-                            }
-                        },
-                        showIndication = !state.isLateLoadMode,
-                        pressFeedbackType = PressFeedbackType.Sink
-                    ) {
-                        BasicComponent(
-                            title = stringResource(R.string.home_not_installed),
-                            summary = stringResource(R.string.home_click_to_install),
-                            startAction = {
-                                Icon(
-                                    Icons.Rounded.ErrorOutline,
-                                    stringResource(R.string.home_not_installed),
-                                    modifier = Modifier.padding(end = 6.dp),
-                                    tint = colorScheme.onBackground,
-                                )
-                            },
-                            endActions = {
-                                if (state.isSELinuxPermissive) {
-                                    TextButton(
-                                        text = stringResource(R.string.home_jailbreak),
-                                        onClick = actions.onJailbreakClick,
-                                        colors = ButtonDefaults.textButtonColorsPrimary()
-                                    )
-                                }
-                            }
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = workingText,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = versionText,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
             }
+            QuickCards(state, actions)
+        }
+    }
+}
 
-            else -> {
-                Card(
-                    onClick = {
-                        if (!state.isLateLoadMode) {
-                            actions.onInstallClick()
-                        }
-                    },
-                    showIndication = !state.isLateLoadMode,
-                    pressFeedbackType = PressFeedbackType.Sink
-                ) {
-                    BasicComponent(
-                        title = stringResource(R.string.home_unsupported),
-                        summary = stringResource(R.string.home_unsupported_reason),
-                        startAction = {
-                            Icon(
-                                Icons.Rounded.ErrorOutline,
-                                stringResource(R.string.home_unsupported),
-                                modifier = Modifier.padding(end = 16.dp),
-                                tint = colorScheme.onBackground,
-                            )
-                        }
-                    )
-                }
+@Composable
+private fun QuickCards(
+    state: HomeUiState,
+    actions: HomeActions,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Card(
+            modifier = Modifier
+                .weight(1f),
+            insideMargin = PaddingValues(16.dp),
+            onClick = { actions.onSuperuserClick() },
+            showIndication = true,
+            pressFeedbackType = PressFeedbackType.Tilt
+        ) {
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = stringResource(R.string.superuser),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp,
+                    color = colorScheme.onSurfaceVariantSummary,
+                )
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = state.superuserCount.toString(),
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colorScheme.onSurface,
+                )
+            }
+        }
+        Card(
+            modifier = Modifier
+                .weight(1f),
+            insideMargin = PaddingValues(16.dp),
+            onClick = { actions.onModuleClick() },
+            showIndication = true,
+            pressFeedbackType = PressFeedbackType.Tilt
+        ) {
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = stringResource(R.string.module),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp,
+                    color = colorScheme.onSurfaceVariantSummary,
+                )
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = state.moduleCount.toString(),
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colorScheme.onSurface,
+                )
             }
         }
     }

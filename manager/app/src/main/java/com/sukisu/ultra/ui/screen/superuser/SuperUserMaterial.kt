@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Remove
@@ -94,7 +93,7 @@ fun SuperUserPagerMaterial(
         topBar = {
             SearchAppBar(
                 snackbarHostState = snackbarHostState,
-                title = { Text(stringResource(R.string.superuser)) },
+                title = { Text(stringResource(R.string.app_list)) },
                 searchText = localSearchText,
                 onSearchTextChange = {
                     localSearchText = it
@@ -113,60 +112,6 @@ fun SuperUserPagerMaterial(
                     }
                 },
                 actions = {
-                    var showSortMenu by remember { mutableStateOf(false) }
-
-                    IconButton(onClick = { showSortMenu = true }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Sort,
-                            contentDescription = stringResource(R.string.menu_sort)
-                        )
-
-                        DropdownMenu(
-                            expanded = showSortMenu,
-                            onDismissRequest = { showSortMenu = false }
-                        ) {
-                            val sortResIds = listOf(
-                                R.string.sort_by_name,
-                                R.string.sort_by_package_name,
-                                R.string.sort_by_install_time,
-                                R.string.sort_by_update_time,
-                            )
-                            val currentSortType = uiState.sortOption / 2
-                            val isReverse = uiState.sortOption % 2 != 0
-
-                            sortResIds.forEachIndexed { index, resId ->
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(resId)) },
-                                    trailingIcon = {
-                                        RadioButton(
-                                            selected = currentSortType == index,
-                                            onClick = null,
-                                        )
-                                    },
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                                        val newOption = index * 2 + (if (isReverse) 1 else 0)
-                                        actions.onUpdateSortOption(newOption)
-                                        showSortMenu = false
-                                    }
-                                )
-                            }
-
-                            HorizontalDivider()
-
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.sort_reverse)) },
-                                trailingIcon = { Checkbox(isReverse, null) },
-                                onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                                    val newOption = currentSortType * 2 + (if (!isReverse) 1 else 0)
-                                    actions.onUpdateSortOption(newOption)
-                                    showSortMenu = false
-                                }
-                            )
-                        }
-                    }
-
                     var showDropdown by remember { mutableStateOf(false) }
 
                     IconButton(onClick = { showDropdown = true }) {
@@ -188,6 +133,7 @@ fun SuperUserPagerMaterial(
                                     showDropdown = false
                                 }
                             )
+
                             if (uiState.userIds.size > 1) {
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.show_only_primary_user_apps)) },
@@ -198,7 +144,51 @@ fun SuperUserPagerMaterial(
                                         showDropdown = false
                                     }
                                 )
+
+                                HorizontalDivider()
                             }
+
+                            HorizontalDivider()
+
+                            val sortItems = listOf(
+                                R.string.sort_by_application_name,
+                                R.string.sort_by_package_name,
+                                R.string.sort_by_install_time,
+                                R.string.sort_by_update_time_full,
+                            )
+                            val currentSortType = uiState.sortOption / 2
+                            val isReverse = uiState.sortOption % 2 != 0
+
+                            sortItems.forEachIndexed { index, resId ->
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(resId)) },
+                                    trailingIcon = {
+                                        RadioButton(
+                                            selected = currentSortType == index,
+                                            onClick = null,
+                                        )
+                                    },
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                        val newOption = index * 2 + (if (isReverse) 1 else 0)
+                                        actions.onUpdateSortOption(newOption)
+                                        showDropdown = false
+                                    }
+                                )
+                            }
+
+                            HorizontalDivider()
+
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.sort_reverse)) },
+                                trailingIcon = { Checkbox(isReverse, null) },
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                    val newOption = currentSortType * 2 + (if (!isReverse) 1 else 0)
+                                    actions.onUpdateSortOption(newOption)
+                                    showDropdown = false
+                                }
+                            )
                         }
                     }
                 },

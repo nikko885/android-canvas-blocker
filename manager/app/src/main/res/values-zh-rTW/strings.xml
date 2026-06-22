@@ -18,6 +18,10 @@
     <string name="selinux_status_permissive">容許執行</string>
     <string name="selinux_status_unknown">不明</string>
     <string name="superuser">授權</string>
+    <string name="app_list">應用程式列表</string>
+    <string name="show_only_primary_user_apps">只顯示主用戶應用</string>
+    <string name="sort_by_application_name">按應用程式名稱排序</string>
+    <string name="sort_by_update_time_full">按更新時間排序</string>
     <string name="sulog_log_files">日誌檔案</string>
     <string name="sulog_failed_to_load">載入 sulog 失敗</string>
     <string name="sulog_disabled_title">尚未啟用 SU 日誌</string>

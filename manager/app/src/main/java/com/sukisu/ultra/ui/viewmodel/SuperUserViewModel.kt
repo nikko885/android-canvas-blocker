@@ -286,7 +286,7 @@ class SuperUserViewModel(
         return apps.groupBy { it.uid }.map { (uid, list) ->
             val sorted = list.sortedWith(comparator)
             val primary = pickPrimary(sorted)
-            val shouldUmount = Natives.uidShouldUmount(uid)
+            val shouldUmount = runCatching { Natives.uidShouldUmount(uid) }.getOrDefault(false)
             val ownerName = if (sorted.size > 1) ownerNameForUid(uid, sorted) else null
 
             GroupedApps(
