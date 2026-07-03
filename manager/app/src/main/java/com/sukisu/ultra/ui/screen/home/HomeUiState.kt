@@ -1,3 +1,8 @@
+/*
+ * Original author: u9521, YuKongA, AlexLiuDev233, ShirkNeko, KOWX712 and SukiSU contributors.
+ * Modified by: Kilo on 2026-06-21.
+ * Modification: Removed unused full-featured UI state after root-dependent page hiding was removed.
+ */
 package com.sukisu.ultra.ui.screen.home
 
 import androidx.compose.runtime.Immutable
@@ -29,9 +34,6 @@ data class HomeUiState(
 ) {
     val isSELinuxPermissive: Boolean
         get() = systemInfo.selinuxStatus == "Permissive"
-
-    val isFullFeatured: Boolean
-        get() = isManager && !requiresNewKernel && isRootAvailable
 
     val showRequireKernelWarning: Boolean
         get() = isManager && requiresNewKernel && lkmMode == true

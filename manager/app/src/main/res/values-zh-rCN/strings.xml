@@ -24,6 +24,9 @@
     <string name="seccomp_status_filter">过滤模式</string>
     <string name="seccomp_status_unknown">未知</string>
     <string name="superuser">超级用户</string>
+    <string name="app_list">应用列表</string>
+    <string name="sort_by_application_name">根据应用名称排序</string>
+    <string name="sort_by_update_time_full">根据更新时间排序</string>
     <string name="module_failed_to_enable">无法启用模块：%s</string>
     <string name="module_failed_to_disable">无法禁用模块：%s</string>
     <string name="module_empty">没有安装模块</string>
@@ -261,10 +264,8 @@
     <string name="settings_selinux_hide_reboot_required">重启生效</string>
     <string name="settings_selinux_hide_failed">错误： %d</string>
     <string name="menu_sort">排序</string>
-    <string name="sort_by_name">应用名</string>
     <string name="sort_by_package_name">包名</string>
     <string name="sort_by_install_time">安装时间</string>
-    <string name="sort_by_update_time">更新时间</string>
     <string name="sort_reverse">倒序</string>
     <string name="profile_flags_desc_no_new_privs">禁止从此 Root Profile 的上下文中通过 KernelSU 进一步提升权限</string>
     <!-- Customize -->

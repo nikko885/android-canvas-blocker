@@ -1,3 +1,8 @@
+/*
+ * Original author: YuKongA and SukiSU contributors.
+ * Modified by: Kilo on 2026-06-21.
+ * Modification: Always show the Material navigation rail and its main pages.
+ */
 package com.sukisu.ultra.ui.component.bottombar
 
 import androidx.compose.foundation.layout.Spacer
@@ -24,20 +29,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.LocalMainPagerState
-import com.sukisu.ultra.ui.util.rootAvailable
 
 @Composable
 fun NavigationRailMaterial(
     modifier: Modifier = Modifier,
 ) {
-    val isManager = Natives.isManager
-    val fullFeatured = isManager && !Natives.requireNewKernel() && rootAvailable()
     val mainPagerState = LocalMainPagerState.current
-
-    if (!fullFeatured) return
 
     val items = listOf(
         Triple(R.string.home, Icons.Filled.Home, Icons.Outlined.Home),

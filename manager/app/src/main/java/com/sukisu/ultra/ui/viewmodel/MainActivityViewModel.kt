@@ -1,3 +1,8 @@
+/*
+ * Original author: u9521, KOWX712 and SukiSU contributors.
+ * Modified by: Kilo on 2026-06-21.
+ * Modification: Added stable main pager page constants and centralized page coercion.
+ */
 package com.sukisu.ultra.ui.viewmodel
 
 import android.content.Context
@@ -83,7 +88,11 @@ private class MainPageState(
 
 object MainPagerConfig {
     const val PAGE_COUNT = 4
+    const val PAGE_HOME = 0
+    const val PAGE_SUPERUSER = 1
+    const val PAGE_MODULES = 2
+    const val PAGE_SETTINGS = 3
     const val LAST_PAGE_INDEX = PAGE_COUNT - 1
 
-    fun coercePage(page: Int): Int = page.coerceIn(0, LAST_PAGE_INDEX)
+    fun coercePage(page: Int): Int = page.coerceIn(PAGE_HOME, LAST_PAGE_INDEX)
 }

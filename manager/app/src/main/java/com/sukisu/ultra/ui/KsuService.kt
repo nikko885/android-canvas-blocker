@@ -72,8 +72,8 @@ class KsuService : RootService() {
             )
             method.invoke(pm, flags, userId) as List<PackageInfo>
         } catch (e: Throwable) {
-            Log.e(TAG, "err", e)
-            ArrayList()
+            Log.e(TAG, "getInstalledPackagesAsUser fallback", e)
+            if (userId == 0) packageManager.getInstalledPackages(flags) else emptyList()
         }
     }
 

@@ -46,13 +46,13 @@ class HomeViewModel : ViewModel() {
     private fun buildState(): HomeUiState {
         val kernelVersion = getKernelVersion()
         val isManager = Natives.isManager
-        val ksuVersion = if (isManager) Natives.version else null
-        val kernelUAPIVersion = if (isManager) Natives.kernelUAPIVersion else null
+        val ksuVersion = Natives.version.takeIf { it > 0 }
+        val kernelUAPIVersion = Natives.kernelUAPIVersion.takeIf { ksuVersion != null }
         val managerUAPIVersion = Natives.managerUAPIVersion
         val lkmMode = ksuVersion?.let { if (kernelVersion.isGKI()) Natives.isLkmMode else null }
         val isRootAvailable = rootAvailable()
         val managerVersion = getManagerVersion(ksuApp)
-        val kernelFullVersion = if (isManager) Natives.getFullVersion() else null
+        val kernelFullVersion = ksuVersion?.let { Natives.getFullVersion() }
 
         return HomeUiState(
             kernelVersion = kernelVersion,

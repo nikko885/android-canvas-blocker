@@ -1,3 +1,8 @@
+/*
+ * Original author: KOWX712, u9521, YuKongA, ShirkNeko and SukiSU contributors.
+ * Modified by: Kilo on 2026-06-21.
+ * Modification: Replaced hard-coded main pager indices with MainPagerConfig constants; always allow navigation to Superuser and Modules.
+ */
 package com.sukisu.ultra.ui.screen.home
 
 import android.content.Intent
@@ -27,6 +32,7 @@ import com.sukisu.ultra.ui.component.dialog.rememberLoadingDialog
 import com.sukisu.ultra.ui.navigation3.Navigator
 import com.sukisu.ultra.ui.navigation3.Route
 import com.sukisu.ultra.ui.viewmodel.HomeViewModel
+import com.sukisu.ultra.ui.viewmodel.MainPagerConfig
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
@@ -54,8 +60,8 @@ fun HomePager(
 
     val actions = HomeActions(
         onInstallClick = { navigator.push(Route.Install()) },
-        onSuperuserClick = { if (!uiState.showRequireKernelWarning) mainState.animateToPage(1) },
-        onModuleClick = { if (!uiState.showRequireKernelWarning) mainState.animateToPage(2) },
+        onSuperuserClick = { mainState.animateToPage(MainPagerConfig.PAGE_SUPERUSER) },
+        onModuleClick = { mainState.animateToPage(MainPagerConfig.PAGE_MODULES) },
         onOpenUrl = uriHandler::openUri,
         onJailbreakClick = {
             loadingDialog.showLoading()

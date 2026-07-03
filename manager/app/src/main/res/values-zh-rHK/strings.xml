@@ -18,6 +18,10 @@
     <string name="selinux_status_permissive">寬容模式</string>
     <string name="selinux_status_unknown">未知</string>
     <string name="superuser">超級使用者</string>
+    <string name="app_list">應用程式列表</string>
+    <string name="show_only_primary_user_apps">僅顯示主要使用者 App</string>
+    <string name="sort_by_application_name">按應用程式名稱排序</string>
+    <string name="sort_by_update_time_full">按更新時間排序</string>
     <string name="module_failed_to_enable">無法啟用模組：%s</string>
     <string name="module_failed_to_disable">無法停用模組：%s</string>
     <string name="module_empty">未安裝模組</string>
@@ -221,7 +225,6 @@
     <string name="settings_floating_bottom_bar_summary">使用 Apple 風格懸浮底部欄</string>
     <string name="settings_enable_glass">液態玻璃</string>
     <string name="settings_enable_glass_summary">為懸浮底部欄啟用液態玻璃效果</string>
-    <string name="show_only_primary_user_apps">僅顯示主要使用者 App</string>
     <string name="settings_auto_jailbreak">自動越獄</string>
     <string name="settings_auto_jailbreak_summary">開機時若偵測到寬容模式 SELinux，將自動使用 Magica 提升權限（需授予本程式背景啟動權限）</string>
     <string name="allow_shell">保持向 Shell 授予 Root 權限</string>
@@ -240,10 +243,8 @@
     <string name="download_cancel">取消</string>
     <string name="download_install">安裝</string>
     <string name="menu_sort">排序</string>
-    <string name="sort_by_name">應用名</string>
     <string name="sort_by_package_name">套件名</string>
     <string name="sort_by_install_time">安裝時間</string>
-    <string name="sort_by_update_time">更新時間</string>
     <string name="sort_reverse">倒序</string>
     <string name="profile_flags_desc_no_new_privs">防止在此 Root Profile 的上下文中透過 KernelSU 進一步提升權限</string>
     <!-- Customize -->

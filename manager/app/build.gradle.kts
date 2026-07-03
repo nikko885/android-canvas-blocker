@@ -116,6 +116,7 @@ android {
     ndkVersion = androidCompileNdkVersion
 
     defaultConfig {
+        applicationId = "com.nikko885.sukiui"
         minSdk = androidMinSdkVersion
         targetSdk = androidTargetSdkVersion
         versionCode = managerVersionCode
@@ -154,9 +155,7 @@ androidComponents {
 }
 
 base {
-    archivesName.set(
-        "SukiSU_${managerVersionName}_${managerVersionCode}"
-    )
+    archivesName.set("sukiui-${managerVersionName}-${System.currentTimeMillis()}")
 }
 
 dependencies {

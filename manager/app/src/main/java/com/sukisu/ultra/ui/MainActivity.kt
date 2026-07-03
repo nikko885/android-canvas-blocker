@@ -1,3 +1,8 @@
+/*
+ * Original author: SukiSU contributors (see git history; includes ShirkNeko, KOWX712, YuKongA, Nullptr and others).
+ * Modified by: Kilo on 2026-06-21.
+ * Modification: Replaced hard-coded main pager indices with MainPagerConfig constants; removed root-dependent main page hiding.
+ */
 package com.sukisu.ultra.ui
 
 import androidx.compose.runtime.mutableIntStateOf
@@ -33,7 +38,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -93,7 +97,6 @@ import com.sukisu.ultra.ui.theme.LocalEnableFloatingBottomBarBlur
 import com.sukisu.ultra.ui.util.install
 import com.sukisu.ultra.ui.util.rememberBlurBackdrop
 import com.sukisu.ultra.ui.util.rememberContentReady
-import com.sukisu.ultra.ui.util.rootAvailable
 import com.sukisu.ultra.ui.viewmodel.MainActivityViewModel
 import com.sukisu.ultra.ui.viewmodel.MainPagerConfig
 import com.sukisu.ultra.ui.webui.WebUIActivity
@@ -256,11 +259,10 @@ fun MainScreen(
     val enableBlur = LocalEnableBlur.current
     val enableFloatingBottomBar = LocalEnableFloatingBottomBar.current
     val enableFloatingBottomBarBlur = LocalEnableFloatingBottomBarBlur.current
-    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { MainPagerConfig.PAGE_COUNT })
+    val pagerState = rememberPagerState(initialPage = MainPagerConfig.coercePage(initialPage), pageCount = { MainPagerConfig.PAGE_COUNT })
     val mainPagerState = rememberMainPagerState(pagerState)
     val isManager = Natives.isManager
-    val isFullFeatured = isManager && !Natives.requireNewKernel() && rootAvailable()
-    var userScrollEnabled by remember(isFullFeatured) { mutableStateOf(isFullFeatured) }
+    val userScrollEnabled = true
     val uiMode = LocalUiMode.current
     val surfaceColor = when (uiMode) {
         UiMode.Material -> MaterialTheme.colorScheme.surface // Blur is not used in Material, this is just a placeholder
@@ -303,10 +305,10 @@ fun MainScreen(
                 ) { page ->
                     val isCurrentPage = page == settledPage
                     when (page) {
-                        0 -> if (isCurrentPage || contentReady) HomePager(navController, bottomInnerPadding, isCurrentPage)
-                        1 -> if (isCurrentPage || contentReady) SuperUserPager(navController, bottomInnerPadding, isCurrentPage)
-                        2 -> if (isCurrentPage || contentReady) ModulePager(bottomInnerPadding, isCurrentPage)
-                        3 -> if (isCurrentPage || contentReady) SettingPager(navController, bottomInnerPadding)
+                        MainPagerConfig.PAGE_HOME -> if (isCurrentPage || contentReady) HomePager(navController, bottomInnerPadding, isCurrentPage)
+                        MainPagerConfig.PAGE_SUPERUSER -> if (isCurrentPage || contentReady) SuperUserPager(navController, bottomInnerPadding, isCurrentPage)
+                        MainPagerConfig.PAGE_MODULES -> if (isCurrentPage || contentReady) ModulePager(bottomInnerPadding, isCurrentPage)
+                        MainPagerConfig.PAGE_SETTINGS -> if (isCurrentPage || contentReady) SettingPager(navController, bottomInnerPadding)
                     }
                 }
             }
@@ -381,7 +383,7 @@ private fun MainScreenBackHandler(
 ) {
     val isPagerBackHandlerEnabled by remember {
         derivedStateOf {
-            navController.current() is Route.Main && navController.backStackSize() == 1 && mainState.selectedPage != 0
+            navController.current() is Route.Main && navController.backStackSize() == 1 && mainState.selectedPage != MainPagerConfig.PAGE_HOME
         }
     }
 
@@ -391,7 +393,7 @@ private fun MainScreenBackHandler(
         state = navEventState,
         isBackEnabled = isPagerBackHandlerEnabled,
         onBackCompleted = {
-            mainState.animateToPage(0)
+            mainState.animateToPage(MainPagerConfig.PAGE_HOME)
         }
     )
 }

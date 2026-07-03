@@ -1,0 +1,101 @@
+Implementation Summary - SukiSU Ultra Manager App
+==============================================
+
+Date: 2026-07-03
+Project: SukiSU Ultra (android-canvas-blocker manager module)
+
+Project Overview
+----------------
+SukiSU Ultra is a kernel-based root solution for Android devices, forked from KernelSU.
+The manager app provides a UI for managing root access, app profiles, modules, and SuSFS settings.
+
+Project Goals
+-------------
+1. STATUS CARD COLOR - Always show green status card on Home page
+   - Card always visible regardless of root/manager state
+   - Light theme: Color(0xFFDFFAE4)
+   - Dark theme: Color(0xFF1A3825)
+   - Green icon tint applied (0xFF36D167/0xFF2E7D32)
+
+2. SETTINGS PAGE - Restored to initial state (user confirmed, no changes needed)
+
+3. RELIABLE APP-LIST LOADING - Work without root dependency
+   - KsuService-first loading with 5 second timeout
+   - PackageManager fallback when KsuService unavailable
+   - Per-user package query with user 0 fallback
+
+Constraints & User Preferences
+----------------------------
+- applicationId: com.nikko885.sukiui (intentionally kept as per user request)
+- Build command: ./gradlew assembleRelease
+- Local review should be provided in Chinese when using suggest tool
+
+Key Changes Made
+----------------
+
+1. STATUS CARD COLOR (Home pages - Material & Miuix)
+   - File: manager/app/src/main/java/com/sukisu/ultra/ui/screen/home/HomeMaterial.kt
+   - File: manager/app/src/main/java/com/sukisu/ultra/ui/screen/home/HomeMiuix.kt
+   - Change: StatusCard now always uses green/success styling regardless of state
+
+2. BOTTOM BAR & NAVIGATION RAIL (Removed root-dependent hiding)
+   - Files:
+     * manager/app/src/main/java/com/sukisu/ultra/ui/component/bottombar/BottomBarMaterial.kt
+     * manager/app/src/main/java/com/sukisu/ultra/ui/component/bottombar/BottomBarMiuix.kt
+     * manager/app/src/main/java/com/sukisu/ultra/ui/component/bottombar/NavigationRailMaterial.kt
+     * manager/app/src/main/java/com/sukisu/ultra/ui/component/bottombar/NavigationRailMiuix.kt
+   - Change: Pages always show all 4 pages (Home, Superuser, Modules, Settings) regardless of root state
+
+3. MAIN ACTIVITY & VIEWMODEL
+   - Files:
+     * manager/app/src/main/java/com/sukisu/ultra/ui/MainActivity.kt
+     * manager/app/src/main/java/com/sukisu/ultra/ui/viewmodel/MainActivityViewModel.kt
+   - Change: Removed root-dependent page filtering logic, PAGE_COUNT fixed at 4
+
+4. APPLICATION LIST (Superuser pages)
+   - Files:
+     * manager/app/src/main/java/com/sukisu/ultra/ui/screen/superuser/SuperUserMaterial.kt
+     * manager/app/src/main/java/com/sukisu/ultra/ui/screen/superuser/SuperUserMiuix.kt
+   - Title: "Application list" (R.string.app_list)
+   - Added: show_only_primary_user_apps menu item to Material dropdown menu
+
+5. APP LIST LOADING (SuperUserRepositoryImpl.kt & KsuService.kt)
+   - Files:
+     * manager/app/src/main/java/com/sukisu/ultra/data/repository/SuperUserRepositoryImpl.kt
+     * manager/app/src/main/java/com/sukisu/ultra/ui/KsuService.kt
+   - Change:
+     * KsuService-first loading with 5 second timeout
+     * Fallback to PackageManager if KsuService fails
+     * Added reconnection logic for KsuService IPC
+     * Per-user package query with user 0 fallback in getInstalledPackagesAsUser
+
+6. APK BUILD CONFIGURATION
+   - File: manager/app/build.gradle.kts
+   - Change: archivesName format updated
+     * Before: sukiui-${System.currentTimeMillis()}
+     * After: sukiui-${managerVersionName}-${System.currentTimeMillis()}
+
+7. STRING RESOURCES
+   - Files:
+     * manager/app/src/main/res/values/strings.xml
+     * manager/app/src/main/res/values-zh-rCN/strings.xml
+     * manager/app/src/main/res/values-zh-rHK/strings.xml
+     * manager/app/src/main/res/values-zh-rTW/strings.xml
+   - Changes:
+     * Fixed duplicate string resource errors (show_only_primary_user_apps, sort_by_name, sort_by_update_time)
+     * R.string.superuser restored to "Superuser"/"超级用户"/"超級使用者"/"授權"
+     * R.string.app_list added for "Application list" page title
+     * Added R.string.show_only_primary_user_apps
+     * Added R.string.sort_by_package_name
+     * Added R.string.sort_by_install_time
+     * Added R.string.sort_reverse
+     * Removed duplicate sort_by_name and sort_by_update_time strings
+
+Unresolved Issues
+-----------------
+- uidShouldUmount exception handling: user requested logging (pending implementation)
+
+Reference Implementation
+------------------------
+- /tmp/kilo/Guise/app/src/main/kotlin/com/houvven/guise/util/app/AppScanner.kt
+  Shows safe fallback using PackageManager.getInstalledApplications(0)

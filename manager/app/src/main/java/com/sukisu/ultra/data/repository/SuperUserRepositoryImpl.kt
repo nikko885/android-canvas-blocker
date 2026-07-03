@@ -3,6 +3,7 @@ package com.sukisu.ultra.data.repository
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -13,6 +14,7 @@ import com.topjohnwu.superuser.ipc.RootService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import com.sukisu.zako.IKsuInterface
 import com.sukisu.ultra.Natives
 import com.sukisu.ultra.data.model.AppInfo
@@ -29,65 +31,101 @@ class SuperUserRepositoryImpl : SuperUserRepository {
 
     override suspend fun getAppList(): Result<Pair<List<AppInfo>, List<Int>>> = withContext(Dispatchers.IO) {
         runCatching {
-            val result = connectKsuService {
+            loadAppListFromKsuService()
+        }.onFailure { throwable ->
+            Log.w(TAG, "Failed to load app list from KsuService, falling back to PackageManager", throwable)
+        }.getOrElse {
+            loadInstalledAppsFromPackageManager()
+        }.let { Result.success(it) }
+    }
+
+    private suspend fun loadAppListFromKsuService(): Pair<List<AppInfo>, List<Int>> = withContext(Dispatchers.IO) {
+        val result = withTimeoutOrNull(5_000) {
+            connectKsuService {
                 Log.w(TAG, "KsuService disconnected")
             }
+        } ?: throw IllegalStateException("KsuService connection timed out")
 
-            var currentBinder = result.first
-            var currentConnection = result.second
+        var currentBinder = result.first
+        var currentConnection = result.second
 
-            try {
-                suspend fun reconnect(): IKsuInterface {
-                    withContext(Dispatchers.Main) {
-                        RootService.unbind(currentConnection)
-                    }
-                    val retry = connectKsuService { Log.w(TAG, "KsuService disconnected") }
-                    currentBinder = retry.first
-                    currentConnection = retry.second
-                    return IKsuInterface.Stub.asInterface(currentBinder)
-                }
-
-                val pm = ksuApp.packageManager
-                val start = SystemClock.elapsedRealtime()
-
-                var iface = IKsuInterface.Stub.asInterface(currentBinder)
-                val idsArray = try {
-                    iface.userIds
-                } catch (_: Exception) {
-                    iface = reconnect()
-                    iface.userIds
-                }
-
-                val slice = try {
-                    iface.getPackages(0)
-                } catch (_: Exception) {
-                    iface = reconnect()
-                    iface.getPackages(0)
-                }
-
-                val packages = slice.list
-                val newApps = packages.map {
-                    val appInfo = it.applicationInfo
-                    val uid = appInfo!!.uid
-                    val profile = Natives.getAppProfile(it.packageName, uid)
-                    AppInfo(
-                        label = appInfo.loadLabel(pm).toString(),
-                        packageInfo = it,
-                        profile = profile,
-                    )
-                }.filter {
-                    val ai = it.packageInfo.applicationInfo!!
-                    !ai.isResourceOverlay
-                }
-
-                Log.i(TAG, "load cost: ${SystemClock.elapsedRealtime() - start}")
-                Pair(newApps, idsArray.toList())
-            } finally {
+        try {
+            suspend fun reconnect(): IKsuInterface {
                 withContext(Dispatchers.Main) {
                     RootService.unbind(currentConnection)
                 }
+                val retry = connectKsuService { Log.w(TAG, "KsuService disconnected") }
+                currentBinder = retry.first
+                currentConnection = retry.second
+                return IKsuInterface.Stub.asInterface(currentBinder)
+            }
+
+            val pm = ksuApp.packageManager
+            val start = SystemClock.elapsedRealtime()
+
+            var iface = IKsuInterface.Stub.asInterface(currentBinder)
+            val idsArray = try {
+                iface.userIds
+            } catch (_: Exception) {
+                iface = reconnect()
+                iface.userIds
+            }
+
+            val slice = try {
+                iface.getPackages(0)
+            } catch (_: Exception) {
+                iface = reconnect()
+                iface.getPackages(0)
+            }
+
+            val packages = slice.list
+            if (packages.isEmpty()) {
+                throw IllegalStateException("KsuService returned an empty package list")
+            }
+
+            val newApps = packages.map {
+                val appInfo = it.applicationInfo
+                val uid = appInfo!!.uid
+                val profile = Natives.getAppProfile(it.packageName, uid)
+                AppInfo(
+                    label = appInfo.loadLabel(pm).toString(),
+                    packageInfo = it,
+                    profile = profile,
+                )
+            }.filter {
+                val ai = it.packageInfo.applicationInfo!!
+                !ai.isResourceOverlay
+            }
+
+            Log.i(TAG, "load cost: ${SystemClock.elapsedRealtime() - start}")
+            Pair(newApps, idsArray.toList())
+        } finally {
+            withContext(Dispatchers.Main) {
+                RootService.unbind(currentConnection)
             }
         }
+    }
+
+    private fun loadInstalledAppsFromPackageManager(): Pair<List<AppInfo>, List<Int>> {
+        val pm = ksuApp.packageManager
+        val packages = pm.getInstalledPackages(PackageManager.GET_PERMISSIONS)
+            .filter {
+                val appInfo = it.applicationInfo
+                appInfo != null && !appInfo.isResourceOverlay
+            }
+        val apps = packages.map { packageInfo ->
+            val appInfo = packageInfo.applicationInfo ?: return@map null
+            val profile = runCatching { Natives.getAppProfile(packageInfo.packageName, appInfo.uid) }.getOrNull()
+            AppInfo(
+                label = appInfo.loadLabel(pm).toString(),
+                packageInfo = packageInfo,
+                profile = profile,
+            )
+        }.filterNotNull()
+        val userIds = packages.mapNotNull { packageInfo ->
+            packageInfo.applicationInfo?.uid?.div(100000)
+        }.distinct()
+        return apps to userIds
     }
 
     override suspend fun refreshProfiles(currentApps: List<AppInfo>): Result<List<AppInfo>> = withContext(Dispatchers.IO) {
@@ -95,7 +133,7 @@ class SuperUserRepositoryImpl : SuperUserRepository {
             if (currentApps.isEmpty()) return@runCatching emptyList()
 
             currentApps.map {
-                val profile = Natives.getAppProfile(it.packageName, it.uid)
+                val profile = runCatching { Natives.getAppProfile(it.packageName, it.uid) }.getOrNull()
                 it.copy(profile = profile)
             }
         }

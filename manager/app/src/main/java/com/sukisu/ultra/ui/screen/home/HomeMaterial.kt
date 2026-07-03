@@ -1,3 +1,8 @@
+/*
+ * Original author: KOWX712, u9521, Ylarod, AlexLiuDev233, ShirkNeko and SukiSU contributors.
+ * Modified by: Kilo on 2026-06-21.
+ * Modification: Always show the status card and main quick cards; remove support and learn-more home cards.
+ */
 package com.sukisu.ultra.ui.screen.home
 
 import androidx.compose.animation.AnimatedVisibility
@@ -20,11 +25,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
@@ -53,6 +54,7 @@ import com.sukisu.ultra.ui.component.dialog.rememberConfirmDialog
 import com.sukisu.ultra.ui.component.material.TonalCard
 import com.sukisu.ultra.ui.component.rebootlistpopup.RebootListPopup
 import com.sukisu.ultra.ui.component.statustag.StatusTag
+import com.sukisu.ultra.ui.theme.isInDarkTheme
 
 @Composable
 fun HomePagerMaterial(
@@ -127,8 +129,6 @@ fun HomePagerMaterial(
                 UpdateCard(state = state, actions = actions)
             }
             InfoCard(systemInfo = state.systemInfo, showFullStatus = state.showFullStatus)
-            DonateCard(onOpenUrl = actions.onOpenUrl)
-            LearnMoreCard(onOpenUrl = actions.onOpenUrl)
             Spacer(Modifier.height(bottomInnerPadding))
         }
     }
@@ -190,11 +190,7 @@ private fun StatusCard(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         TonalCard(
-            containerColor = if (state.ksuVersion != null) {
-                MaterialTheme.colorScheme.secondaryContainer
-            } else {
-                MaterialTheme.colorScheme.errorContainer
-            },
+            containerColor = if (isInDarkTheme()) Color(0xFF1A3825) else Color(0xFFDFFAE4),
             onClick = {
                 if (!state.isLateLoadMode) {
                     actions.onInstallClick()
@@ -207,151 +203,121 @@ private fun StatusCard(
                     .padding(24.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                when {
-                    state.ksuVersion != null -> {
-                        val workingMode = when (state.lkmMode) {
-                            null -> ""
-                            true -> "LKM"
-                            else -> "GKI"
-                        }
+                val workingState = buildString {
+                    if (state.isSafeMode) {
+                        append(" [${stringResource(id = R.string.safe_mode)}]")
+                    }
+                    if (state.isLateLoadMode) {
+                        append(" [${stringResource(id = R.string.jailbreak_mode)}]")
+                    }
+                }
+                val workingMode = when (state.lkmMode) {
+                    null -> ""
+                    true -> "LKM"
+                    else -> "GKI"
+                }
+                val workingText = if (state.ksuVersion != null) {
+                    "${stringResource(id = R.string.home_working)}$workingMode$workingState"
+                } else {
+                    stringResource(R.string.home_not_installed)
+                }
+                val versionText = state.ksuVersion?.let { version ->
+                    stringResource(R.string.home_working_version, "$version-${state.kernelUAPIVersion}")
+                } ?: stringResource(R.string.home_not_installed)
 
-                        Icon(Icons.Outlined.CheckCircle, stringResource(R.string.home_working))
-                        Column(Modifier.padding(start = 20.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = stringResource(id = R.string.home_working),
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                if (workingMode.isNotEmpty()) {
-                                    Spacer(Modifier.width(8.dp))
-                                    StatusTag(
-                                        label = workingMode,
-                                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                                        backgroundColor = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                                if (state.isSafeMode) {
-                                    Spacer(Modifier.width(8.dp))
-                                    StatusTag(
-                                        label = stringResource(id = R.string.safe_mode),
-                                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                                        backgroundColor = MaterialTheme.colorScheme.errorContainer
-                                    )
-                                }
-                                if (state.isLateLoadMode) {
-                                    Spacer(Modifier.width(8.dp))
-                                    StatusTag(
-                                        label = stringResource(id = R.string.jailbreak_mode),
-                                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                                        backgroundColor = MaterialTheme.colorScheme.errorContainer
-                                    )
-                                }
-                            }
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(R.string.home_working_version, "${state.ksuVersion}-${state.kernelUAPIVersion}"),
-                                style = MaterialTheme.typography.bodyMedium
+                Icon(
+                    Icons.Outlined.CheckCircle,
+                    workingText,
+                    tint = if (isInDarkTheme()) Color(0xFF36D167) else Color(0xFF2E7D32)
+                )
+                Column(Modifier.padding(start = 20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = workingText,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        if (workingMode.isNotEmpty()) {
+                            Spacer(Modifier.width(8.dp))
+                            StatusTag(
+                                label = workingMode,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                                backgroundColor = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        if (state.isSafeMode) {
+                            Spacer(Modifier.width(8.dp))
+                            StatusTag(
+                                label = stringResource(id = R.string.safe_mode),
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                backgroundColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        }
+                        if (state.isLateLoadMode) {
+                            Spacer(Modifier.width(8.dp))
+                            StatusTag(
+                                label = stringResource(id = R.string.jailbreak_mode),
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                backgroundColor = MaterialTheme.colorScheme.errorContainer
                             )
                         }
                     }
-
-                    state.kernelVersion.isGKI() -> {
-                        Icon(Icons.Outlined.Warning, stringResource(R.string.home_not_installed))
-                        Column(
-                            modifier = Modifier
-                                .padding(start = 20.dp)
-                                .weight(1f)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.home_not_installed),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(R.string.home_click_to_install),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                        if (state.isSELinuxPermissive) {
-                            Button(
-                                onClick = actions.onJailbreakClick,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error,
-                                    contentColor = MaterialTheme.colorScheme.onError
-                                )
-                            ) {
-                                Text(stringResource(R.string.home_jailbreak))
-                            }
-                        }
-                    }
-
-                    else -> {
-                        Icon(Icons.Outlined.Block, stringResource(R.string.home_unsupported))
-                        Column(Modifier.padding(start = 20.dp)) {
-                            Text(
-                                text = stringResource(R.string.home_unsupported),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(R.string.home_unsupported_reason),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = versionText,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }
-        if (state.isFullFeatured) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            TonalCard(
+                modifier = Modifier.weight(1f),
+                onClick = actions.onSuperuserClick
             ) {
-                TonalCard(
-                    modifier = Modifier.weight(1f),
-                    onClick = actions.onSuperuserClick
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 16.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.superuser),
-                            style = MaterialTheme.typography.bodyLarge,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = state.superuserCount.toString(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.superuser),
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = state.superuserCount.toString(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.outline
+                    )
                 }
-                TonalCard(
-                    modifier = Modifier.weight(1f),
-                    onClick = actions.onModuleClick
+            }
+            TonalCard(
+                modifier = Modifier.weight(1f),
+                onClick = actions.onModuleClick
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 16.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.module),
-                            style = MaterialTheme.typography.bodyLarge,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = state.moduleCount.toString(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.module),
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = state.moduleCount.toString(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.outline
+                    )
                 }
             }
         }

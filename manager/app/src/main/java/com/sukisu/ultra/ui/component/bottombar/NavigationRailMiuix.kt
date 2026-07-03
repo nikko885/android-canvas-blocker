@@ -1,3 +1,8 @@
+/*
+ * Original author: YuKongA and SukiSU contributors.
+ * Modified by: Kilo on 2026-06-21.
+ * Modification: Always show the Miuix navigation rail and its main pages.
+ */
 package com.sukisu.ultra.ui.component.bottombar
 
 import androidx.compose.foundation.layout.Spacer
@@ -8,10 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.sukisu.ultra.Natives
 import com.sukisu.ultra.ui.LocalMainPagerState
 import com.sukisu.ultra.ui.util.BlurredBar
-import com.sukisu.ultra.ui.util.rootAvailable
 import top.yukonga.miuix.kmp.basic.NavigationRail
 import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
@@ -22,10 +25,6 @@ fun NavigationRailMiuix(
     blurBackdrop: LayerBackdrop?,
     modifier: Modifier = Modifier,
 ) {
-    val isManager = Natives.isManager
-    val fullFeatured = isManager && !Natives.requireNewKernel() && rootAvailable()
-    if (!fullFeatured) return
-
     val mainState = LocalMainPagerState.current
 
     val items = BottomBarDestination.entries.map { destination ->

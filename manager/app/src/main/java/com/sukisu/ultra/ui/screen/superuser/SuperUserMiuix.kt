@@ -96,7 +96,6 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import top.yukonga.miuix.kmp.icon.extended.MoreCircle
 import top.yukonga.miuix.kmp.icon.extended.Notes
-import top.yukonga.miuix.kmp.icon.extended.Sort
 import top.yukonga.miuix.kmp.overlay.OverlayListPopup
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
@@ -127,7 +126,7 @@ fun SuperUserPagerMiuix(
                 searchStatus.TopAppBarAnim(backgroundColor = barColor) {
                     TopAppBar(
                         color = barColor,
-                        title = stringResource(R.string.superuser),
+                        title = stringResource(R.string.app_list),
                         navigationIcon = {
                             IconButton(
                                 onClick = actions.onOpenSulog,
@@ -141,71 +140,6 @@ fun SuperUserPagerMiuix(
                         },
                         actions = {
                             Box {
-                                val showSortPopup = remember { mutableStateOf(false) }
-                                OverlayListPopup(
-                                    show = showSortPopup.value,
-                                    popupPositionProvider = ListPopupDefaults.MenuPositionProvider,
-                                    alignment = PopupPositionProvider.Align.TopEnd,
-                                    onDismissRequest = { showSortPopup.value = false },
-                                    content = {
-                                        ListPopupColumn {
-                                            val sortResIds = listOf(
-                                                R.string.sort_by_name,
-                                                R.string.sort_by_package_name,
-                                                R.string.sort_by_install_time,
-                                                R.string.sort_by_update_time,
-                                            )
-                                            val currentSortType = uiState.sortOption / 2
-                                            val isReverse = uiState.sortOption % 2 != 0
-                                            val sortGroupSize = sortResIds.size + 1
-
-                                            sortResIds.forEachIndexed { index, resId ->
-                                                DropdownImpl(
-                                                    text = stringResource(resId),
-                                                    optionSize = sortGroupSize,
-                                                    isSelected = currentSortType == index,
-                                                    index = index,
-                                                    onSelectedIndexChange = {
-                                                        val newOption = index * 2 + (if (isReverse) 1 else 0)
-                                                        actions.onUpdateSortOption(newOption)
-                                                        showSortPopup.value = false
-                                                    }
-                                                )
-                                            }
-
-                                            HorizontalDivider(
-                                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
-                                                thickness = 1.5.dp,
-                                            )
-
-                                            DropdownImpl(
-                                                text = stringResource(R.string.sort_reverse),
-                                                optionSize = sortGroupSize,
-                                                isSelected = isReverse,
-                                                index = sortResIds.size,
-                                                onSelectedIndexChange = {
-                                                    val newOption = currentSortType * 2 + (if (!isReverse) 1 else 0)
-                                                    actions.onUpdateSortOption(newOption)
-                                                    showSortPopup.value = false
-                                                }
-                                            )
-                                        }
-                                    }
-                                )
-
-                                IconButton(
-                                    onClick = { showSortPopup.value = true },
-                                    holdDownState = showSortPopup.value,
-                                ) {
-                                    Icon(
-                                        imageVector = MiuixIcons.Sort,
-                                        tint = colorScheme.onSurface,
-                                        contentDescription = stringResource(R.string.menu_sort)
-                                    )
-                                }
-                            }
-
-                            Box {
                                 val showTopPopup = remember { mutableStateOf(false) }
                                 OverlayListPopup(
                                     show = showTopPopup.value,
@@ -217,6 +151,15 @@ fun SuperUserPagerMiuix(
                                     content = {
                                         val isMultiUser = uiState.userIds.size > 1
                                         val size = if (isMultiUser) 2 else 1
+                                        val sortResIds = listOf(
+                                            R.string.sort_by_application_name,
+                                            R.string.sort_by_package_name,
+                                            R.string.sort_by_install_time,
+                                            R.string.sort_by_update_time_full,
+                                        )
+                                        val currentSortType = uiState.sortOption / 2
+                                        val isReverse = uiState.sortOption % 2 != 0
+                                        val sortGroupSize = sortResIds.size + 1
                                         ListPopupColumn {
                                             DropdownImpl(
                                                 text = stringResource(R.string.show_system_apps),
@@ -240,6 +183,42 @@ fun SuperUserPagerMiuix(
                                                     index = 1
                                                 )
                                             }
+
+                                            HorizontalDivider(
+                                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                                                thickness = 1.5.dp,
+                                            )
+
+                                            sortResIds.forEachIndexed { index, resId ->
+                                                DropdownImpl(
+                                                    text = stringResource(resId),
+                                                    optionSize = sortGroupSize,
+                                                    isSelected = currentSortType == index,
+                                                    index = index,
+                                                    onSelectedIndexChange = {
+                                                        val newOption = index * 2 + (if (isReverse) 1 else 0)
+                                                        actions.onUpdateSortOption(newOption)
+                                                        showTopPopup.value = false
+                                                    }
+                                                )
+                                            }
+
+                                            HorizontalDivider(
+                                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                                                thickness = 1.5.dp,
+                                            )
+
+                                            DropdownImpl(
+                                                text = stringResource(R.string.sort_reverse),
+                                                optionSize = sortGroupSize,
+                                                isSelected = isReverse,
+                                                index = sortResIds.size,
+                                                onSelectedIndexChange = {
+                                                    val newOption = currentSortType * 2 + (if (!isReverse) 1 else 0)
+                                                    actions.onUpdateSortOption(newOption)
+                                                    showTopPopup.value = false
+                                                }
+                                            )
                                         }
                                     }
                                 )
